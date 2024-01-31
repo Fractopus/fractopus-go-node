@@ -53,6 +53,7 @@ func Process() {
 }`)
 
 	if err == nil {
+		log.Println(post.Get("data.transactions|@pretty"))
 		log.Println(post.Get("data.transactions.pageInfo.hasNextPage").Bool())
 	}
 
