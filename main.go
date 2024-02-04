@@ -1,13 +1,18 @@
 package main
 
 import (
-	"com.fractopus/fractopus-node/gql"
+	"com.fractopus/fractopus-node/storage"
 	"github.com/gin-gonic/gin"
 	"log"
 )
 
+func init() {
+	storage.RedisInit()
+}
+
 func main() {
-	go gql.Process()
+
+	//go gql.Process()
 	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
 	err := router.SetTrustedProxies([]string{"127.0.0.1"})
