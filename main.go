@@ -13,6 +13,7 @@ func init() {
 func main() {
 
 	//go gql.Process()
+
 	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
 	err := router.SetTrustedProxies([]string{"127.0.0.1"})
