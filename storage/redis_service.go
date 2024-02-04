@@ -31,6 +31,7 @@ func RedisInit() {
 func SetWithDefaultExpiry(key string, value interface{}) error {
 	return SetWithTimeout(key, value, defaultExpiry)
 }
+
 func SetWithTimeout(key string, value interface{}, expiry time.Duration) error {
 	return redisClient.Set(keyPre+key, value, expiry).Err()
 }

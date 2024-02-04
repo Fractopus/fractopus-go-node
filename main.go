@@ -7,6 +7,7 @@ import (
 )
 
 func init() {
+	storage.SqliteDbInit()
 	storage.RedisInit()
 }
 
