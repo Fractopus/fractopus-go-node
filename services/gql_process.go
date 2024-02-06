@@ -44,7 +44,7 @@ func ProcessUri() {
 		}
 
 		if len(urlMap) > 0 {
-			for key, _ := range urlMap {
+			for key := range urlMap {
 				if db_dao.CheckUriExist(key) {
 					delete(urlMap, key)
 				}
@@ -53,7 +53,7 @@ func ProcessUri() {
 
 		if len(urlMap) > 0 {
 			var list []model.OpusUri
-			for key, _ := range urlMap {
+			for key := range urlMap {
 				list = append(list, model.OpusUri{
 					Uri: key,
 				})
