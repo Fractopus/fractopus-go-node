@@ -2,18 +2,21 @@ package main
 
 import (
 	"com.fractopus/fractopus-node/storage"
+	"com.fractopus/fractopus-node/storage/db_dao"
 	"github.com/gin-gonic/gin"
 	"log"
 )
 
 func init() {
-	storage.SqliteDbInit()
+	db_dao.SqliteDbInit()
 	storage.RedisInit()
 }
 
 func main() {
 
 	//go gql.Process()
+
+	//go db_dao.SaveMany()
 
 	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
