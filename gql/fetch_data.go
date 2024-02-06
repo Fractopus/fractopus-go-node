@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/tidwall/gjson"
 	"io"
 	"log"
@@ -11,7 +12,7 @@ import (
 )
 
 var baseGqlUrl = "https://knn3-gateway.knn3.xyz/arseeding/graphql"
-var baseArseedingUrl = "https://arseed.web3infra.dev/"
+var baseArSeedingUrl = "https://arseed.web3infra.dev/"
 
 func init() {
 	log.Println("begin read data from gql")
@@ -63,6 +64,38 @@ func Process() {
 	}
 }
 
+func GetUriList(lastCursor string) (gjson.Result, error) {
+
+	ql := `query {
+  transactions(
+    owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
+    first: 2
+    after:"%v"
+    sort: HEIGHT_ASC
+    tags: [
+      { name: "p", values: ["fractopus"] }
+    ]
+  ) {
+    pageInfo {
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        tags {
+          name
+          value
+        }
+      }
+    }
+  }
+}
+`
+	ql = fmt.Sprintf(ql, lastCursor)
+	return gqlHttpPost(ql)
+}
+
 func gqlHttpPost(ql string) (gjson.Result, error) {
 	data := GraphQLRequest{Query: ql}
 	jsonData, _ := json.Marshal(data)
@@ -81,7 +114,7 @@ func gqlHttpPost(ql string) (gjson.Result, error) {
 }
 
 func txDetail(id string) (gjson.Result, error) {
-	resp, _ := http.Get(baseArseedingUrl + id)
+	resp, _ := http.Get(baseArSeedingUrl + id)
 	body, _ := io.ReadAll(resp.Body)
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()

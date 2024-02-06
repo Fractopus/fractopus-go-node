@@ -2,7 +2,6 @@ package db_dao
 
 import (
 	"com.fractopus/fractopus-node/storage/model"
-	"fmt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"log"
@@ -16,6 +15,7 @@ func SqliteDbInit() {
 		log.Fatalln(err)
 	}
 	gormDb = db
+	err = gormDb.AutoMigrate(&model.ConfigParam{})
 	err = gormDb.AutoMigrate(&model.OpusUri{})
 	err = gormDb.AutoMigrate(&model.OpusStream{})
 	if err != nil {
@@ -23,17 +23,40 @@ func SqliteDbInit() {
 	}
 }
 
-func SaveMany() {
-	log.Println("开始")
-	for j := 0; j < 10000; j++ {
-		var list []model.OpusUri
-		for i := 1; i < 1000; i++ {
-			temp := model.OpusUri{
-				Uri: fmt.Sprintf("test %v", i)}
-			list = append(list, temp)
-		}
-		log.Println("完成组装")
-		gormDb.Save(&list)
-		log.Println("完成")
+func SaveLatestCursor(cursor string) {
+	param := model.ConfigParam{}
+	gormDb.Where("name=?", "latestCursor").First(&param)
+	if param.ID == 0 {
+		param = model.ConfigParam{Name: "latestCursor", Value: cursor}
+	} else {
+		param.Value = cursor
+	}
+	gormDb.Save(&param)
+}
+
+func GetLatestCursor() string {
+	param := model.ConfigParam{}
+	err := gormDb.Where("name=?", "latestCursor").First(&param).Error
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+	return param.Value
+}
+
+func CheckUriExist(uri string) bool {
+	var count int64 = -1
+	err := gormDb.Model(model.OpusUri{}).Where("uri=?", uri).Count(&count).Error
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	return count > 0
+}
+
+func SaveUris(list []model.OpusUri) {
+	err := gormDb.Save(&list).Error
+	if err != nil {
+		log.Println(err)
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"com.fractopus/fractopus-node/services"
 	"com.fractopus/fractopus-node/storage"
 	"com.fractopus/fractopus-node/storage/db_dao"
 	"github.com/gin-gonic/gin"
@@ -13,10 +14,7 @@ func init() {
 }
 
 func main() {
-
-	//go gql.Process()
-
-	//go db_dao.SaveMany()
+	go services.ProcessUri()
 
 	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
