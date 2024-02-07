@@ -64,12 +64,43 @@ func Process() {
 	}
 }
 
-func GetUriList(lastCursor string) (gjson.Result, error) {
-
+func GetUriWaitOnChainList() (gjson.Result, error) {
 	ql := `query {
   transactions(
     owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
-    first: 2
+    first: 50
+    sort: HEIGHT_ASC
+    tags: [
+      { name: "p", values: ["fractopus"] }
+    ]
+  ) {
+    pageInfo {
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        tags {
+          name
+          value
+        }
+        block{
+          height
+        	timestamp
+        }
+      }
+    }
+  }
+}
+`
+	return gqlHttpPost(ql)
+}
+func GetUriOnChainList(lastCursor string) (gjson.Result, error) {
+	ql := `query {
+  transactions(
+    owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
+    first: 50
     after:"%v"
     sort: HEIGHT_ASC
     tags: [

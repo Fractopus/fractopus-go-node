@@ -14,7 +14,8 @@ func init() {
 }
 
 func main() {
-	go services.ProcessUri()
+	go services.ProcessOnChainUri()
+	go services.ProcessWaitOnChainUri()
 
 	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
