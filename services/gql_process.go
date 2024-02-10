@@ -48,7 +48,7 @@ func ProcessOnChainUri() {
 		if hasNextPage {
 			time.Sleep(10 * time.Second)
 		} else {
-			time.Sleep(2 * time.Minute)
+			time.Sleep(1 * time.Minute)
 		}
 	}
 }
@@ -80,7 +80,7 @@ func ProcessWaitOnChainUri() {
 			}
 		}
 		saveUriListToDb(urlMap)
-		time.Sleep(2 * time.Minute)
+		time.Sleep(1 * time.Minute)
 	}
 }
 
@@ -101,5 +101,13 @@ func saveUriListToDb(urlMap map[string]bool) {
 			})
 		}
 		db_dao.SaveUris(list)
+
+		//TODO 获取上游详情，写入数据和redis
+		for _, node := range list {
+			txDetail, err := gql.GetLatestTxDetailByUri(node.Uri)
+			log.Println(err)
+			log.Println(txDetail.Raw)
+		}
+
 	}
 }

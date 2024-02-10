@@ -22,120 +22,151 @@ type GraphQLRequest struct {
 	Query string `json:"query"`
 }
 
-func Process() {
-	post, err := gqlHttpPost(`query {
-  transactions(
-    # first: 10
-    # after: "ODRKM00zMUQxRWtfbnhLVkkzeUI0WUtVSE9OaHd5cXY4ekl6Z0VhVDY2VQ=="
-    tags: [
-      { name: "Piece-Uuid", values: ["98bb10d0f62f46a3b32b592e21c7536e"] }
-      # { name: "App-Name", values: ["Cascad3"] },
-    ]
-  ) {
-    pageInfo {
-      hasNextPage
-    }
-
-    edges {
-      cursor
-      node {
-        id
-        owner {
-          address
-        }
-        block {
-          id
-          timestamp
-          height
-        }
-      }
-    }
-  }
-}`)
-
-	if err == nil {
-		log.Println(post.Get("data.transactions|@pretty"))
-		log.Println(post.Get("data.transactions.pageInfo.hasNextPage").Bool())
-	}
-
-	detail, err := txDetail("-GpiL0yIJO5hlPJD2y42v3QfZVsoNRZ0HVXtAGFp3bE")
-	if err == nil {
-		log.Println(detail)
-	}
-}
-
 func GetUriWaitOnChainList() (gjson.Result, error) {
 	ql := `query {
-  transactions(
-    owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
-    first: 50
-    sort: HEIGHT_ASC
-    tags: [
-      { name: "p", values: ["fractopus"] }
-    ]
-  ) {
-    pageInfo {
-      hasNextPage
-    }
-    edges {
-      cursor
-      node {
-        id
-        tags {
-          name
-          value
-        }
-        block{
-          height
-        	timestamp
-        }
-      }
-    }
-  }
-}
-`
+			  transactions(
+				owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
+				first: 50
+				sort: HEIGHT_ASC
+				tags: [
+				  { name: "p", values: ["fractopus"] }
+				]
+			  ) {
+				pageInfo {
+				  hasNextPage
+				}
+				edges {
+				  cursor
+				  node {
+					id
+					tags {
+					  name
+					  value
+					}
+					block{
+					  height
+						timestamp
+					}
+				  }
+				}
+			  }
+			}
+			`
 	return gqlHttpPost(ql)
 }
 func GetUriOnChainList(lastCursor string) (gjson.Result, error) {
 	ql := `query {
-  transactions(
-    owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
-    first: 50
-    after:"%v"
-    sort: HEIGHT_ASC
-    tags: [
-      { name: "p", values: ["fractopus"] }
-    ]
-  ) {
-    pageInfo {
-      hasNextPage
-    }
-    edges {
-      cursor
-      node {
-        id
-        tags {
-          name
-          value
-        }
-      }
-    }
-  }
-}
-`
+			  transactions(
+				owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
+				first: 50
+				after:"%v"
+				sort: HEIGHT_ASC
+				tags: [
+				  { name: "p", values: ["fractopus"] }
+				]
+			  ) {
+				pageInfo {
+				  hasNextPage
+				}
+				edges {
+				  cursor
+				  node {
+					id
+					tags {
+					  name
+					  value
+					}
+				  }
+				}
+			  }
+			}
+			`
 	ql = fmt.Sprintf(ql, lastCursor)
 	return gqlHttpPost(ql)
+}
+
+func GetLatestTxDetailByUri(uri string) (gjson.Result, error) {
+	ql := `query {
+			  transactions(
+				owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
+				first: 1
+				sort: HEIGHT_ASC
+				tags: [
+				  { name: "p", values: ["fractopus"] }
+				  { name: "uri", values: ["%v"] }
+				]
+			  ) {
+				edges {
+				  node {
+					id
+					block {
+					  height
+					}
+				  }
+				}
+			  }
+			}`
+
+	ql = fmt.Sprintf(ql, uri)
+	result, err := gqlHttpPost(ql)
+	if err == nil {
+		edges := result.Get("data.transactions.edges").Array()
+		if len(edges) > 0 {
+			edge := edges[0]
+			if !edge.Get("node.block").IsObject() {
+				return txDetail(edge.Get("node.id").String())
+			}
+		}
+	}
+
+	ql =
+		`query {
+			  transactions(
+				owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
+				first: 1
+				sort: HEIGHT_DESC
+				tags: [
+				  { name: "p", values: ["fractopus"] }
+				  { name: "uri", values: ["%v"] }
+				]
+			  ) {
+				edges {
+				  node {
+					id
+				  }
+				}
+			  }
+			}
+			`
+	ql = fmt.Sprintf(ql, uri)
+	result, err = gqlHttpPost(ql)
+	if err == nil {
+		edges := result.Get("data.transactions.edges").Array()
+		if len(edges) > 0 {
+			edge := edges[0]
+			return txDetail(edge.Get("node.id").String())
+		}
+	}
+	return gjson.Result{}, errors.New("no data")
 }
 
 func gqlHttpPost(ql string) (gjson.Result, error) {
 	data := GraphQLRequest{Query: ql}
 	jsonData, _ := json.Marshal(data)
-	resp, _ := http.Post(baseGqlUrl, "application/json", bytes.NewBuffer(jsonData))
-	body, _ := io.ReadAll(resp.Body)
+	resp, err := http.Post(baseGqlUrl, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Println(err)
+		return gjson.Result{}, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return gjson.Result{}, err
+	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-
+			log.Println(err)
 		}
 	}(resp.Body)
 	if resp.StatusCode == http.StatusOK {
@@ -145,12 +176,20 @@ func gqlHttpPost(ql string) (gjson.Result, error) {
 }
 
 func txDetail(id string) (gjson.Result, error) {
-	resp, _ := http.Get(baseArSeedingUrl + id)
-	body, _ := io.ReadAll(resp.Body)
+	resp, err := http.Get(baseArSeedingUrl + id)
+	if err != nil {
+		log.Println(err)
+		return gjson.Result{}, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return gjson.Result{}, err
+	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-
+			log.Println(err)
 		}
 	}(resp.Body)
 	if resp.StatusCode == http.StatusOK {
