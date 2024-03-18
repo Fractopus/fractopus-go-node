@@ -15,7 +15,7 @@ type FractopusInfo struct {
 	ShareList []gjson.Result
 }
 
-func ProcessOnChainUri() {
+func ProcessOnChainedUri() {
 	latestCursor := db_dao.GetLatestCursor()
 	for {
 		result, err := gql.GetUriOnChainList(latestCursor)
@@ -26,7 +26,7 @@ func ProcessOnChainUri() {
 		}
 		hasNextPage := result.Get("data.transactions.pageInfo.hasNextPage").Bool()
 		edges := result.Get("data.transactions.edges").Array()
-		log.Println("ProcessOnChainUri edges ", len(edges))
+		log.Println("ProcessOnChainedUri edges ", len(edges))
 		urlMap := map[string]FractopusInfo{}
 		for i, edge := range edges {
 			getOpusInfo(edge, urlMap)

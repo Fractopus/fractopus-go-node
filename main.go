@@ -19,7 +19,7 @@ func init() {
 • shrL:[{"uri":"xxx","shr":"0.1"}] 如果上游的uri没有上链过，在分润的时候，就跳过
 */
 func main() {
-	go services.ProcessOnChainUri()
+	go services.ProcessOnChainedUri()
 	go services.ProcessWaitOnChainUri()
 
 	gin.SetMode(gin.DebugMode)
