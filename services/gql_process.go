@@ -46,7 +46,10 @@ func ProcessOnChainUri() {
 			db_dao.SaveLatestCursor(latestCursor)
 		}
 
-		saveUriListToDb(urlMap)
+		if len(urlMap) > 0 {
+			saveUriListToDb(urlMap)
+		}
+
 		if hasNextPage {
 			time.Sleep(10 * time.Second)
 		} else {
@@ -74,7 +77,9 @@ func ProcessWaitOnChainUri() {
 			}
 			getOpusInfo(edge, tags, urlMap)
 		}
-		saveUriListToDb(urlMap)
+		if len(urlMap) > 0 {
+			saveUriListToDb(urlMap)
+		}
 		time.Sleep(1 * time.Minute)
 	}
 }

@@ -24,6 +24,6 @@ type OpusStream struct {
 	ID          uint      `gorm:"primaryKey;autoIncrement;notnull"`
 	CurrUriId   uint      `gorm:"index;not null"`
 	UpstreamUri string    `gorm:"index;type:varchar(2048);not null"`
-	Ratio       float64   `gorm:"index;type:decimal(6,4);not null"`
+	Ratio       float64   `gorm:"type:decimal(6,4);not null"`
 	CreatedAt   time.Time `gorm:"autoCreateTime;"`
 }
