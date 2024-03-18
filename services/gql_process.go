@@ -99,6 +99,11 @@ func getOpusInfo(edge gjson.Result, urlMap map[string]FractopusInfo) {
 	}
 }
 
+/*
+• “p": "fractopus" / 分形章鱼协议
+• "uri" / URI
+• shrL:[{"uri":"xxx","shr":"0.1"}] 如果上游的uri没有上链过，在分润的时候，在分润系统记账
+*/
 func saveUriListToDb(urlMap map[string]FractopusInfo) {
 	if len(urlMap) > 0 {
 		for key := range urlMap {
@@ -160,7 +165,7 @@ func dealUpstream(urlMap map[string]FractopusInfo) {
 						continue
 					}
 					upstreamUri := shareItem.Get("uri").String()
-					ratio := shareItem.Get("ratio").Float()
+					ratio := shareItem.Get("shr").Float()
 					if ratio < 0 {
 						continue
 					}
