@@ -54,7 +54,29 @@ func CheckUriExist(uri string) bool {
 	return count > 0
 }
 
+func GetUriNodeByUri(uri string) *model.OpusNode {
+	opusNode := &model.OpusNode{}
+	err := gormDb.Where("uri=?", uri).First(opusNode).Error
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return opusNode
+}
+
 func SaveUris(list []model.OpusNode) {
+	err := gormDb.Save(&list).Error
+	if err != nil {
+		log.Println(err)
+	}
+}
+func DeleteUpstreamsByNodeId(id uint) {
+	err := gormDb.Where("curr_uri_id=?", id).Delete(&model.OpusStream{}).Error
+	if err != nil {
+		log.Println(err)
+	}
+}
+func SaveUpstreams(list []model.OpusStream) {
 	err := gormDb.Save(&list).Error
 	if err != nil {
 		log.Println(err)

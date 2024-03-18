@@ -12,7 +12,7 @@ import (
 type FractopusInfo struct {
 	Uri       string
 	Owner     string
-	ShareList gjson.Result
+	ShareList []gjson.Result
 }
 
 func ProcessOnChainUri() {
@@ -93,7 +93,7 @@ func getOpusInfo(edge gjson.Result, tags []gjson.Result, urlMap map[string]Fract
 			opusUri.Uri = tag.Get("value").String()
 		}
 		if tag.Get("name").String() == "shrL" {
-			opusUri.ShareList = tag.Get("value")
+			opusUri.ShareList = tag.Get("value").Array()
 		}
 	}
 	if len(opusUri.Uri) > 0 {
@@ -111,22 +111,76 @@ func saveUriListToDb(urlMap map[string]FractopusInfo) {
 	}
 
 	if len(urlMap) > 0 {
-		var list []model.OpusNode
-		// TODO 爬虫，验证uri是否是owner的
-		for _, value := range urlMap {
-			list = append(list, model.OpusNode{
-				Uri:   value.Uri,
-				Owner: value.Owner,
-			})
-		}
-		db_dao.SaveUris(list)
-
-		//TODO 获取上游详情，写入数据和redis
+		list := dealMainNodes(urlMap)
+		dealUpstream(urlMap)
+		//TODO 获取上游详情，写入到redis
 		for _, node := range list {
 			txDetail, err := gql.GetLatestTxDetailByUri(node.Uri)
 			log.Println(err)
 			log.Println(txDetail.Raw)
 		}
 
+	}
+}
+
+func dealMainNodes(urlMap map[string]FractopusInfo) []model.OpusNode {
+	var list []model.OpusNode
+	// TODO 爬虫，验证uri是否是owner的
+	for _, value := range urlMap {
+		list = append(list, model.OpusNode{
+			Uri:   value.Uri,
+			Owner: value.Owner,
+		})
+		if len(value.ShareList) > 0 {
+			for _, shareItem := range value.ShareList {
+				if shareItem.Get("uri").Exists() && len(shareItem.Get("uri").String()) > 0 {
+					if !db_dao.CheckUriExist(shareItem.Get("uri").String()) {
+						list = append(list, model.OpusNode{
+							Uri:   shareItem.Get("uri").String(),
+							Owner: "",
+						})
+					}
+				}
+			}
+		}
+	}
+	if len(list) > 0 {
+		db_dao.SaveUris(list)
+	}
+	return list
+}
+
+func dealUpstream(urlMap map[string]FractopusInfo) {
+	var streamList []model.OpusStream
+	for _, value := range urlMap {
+		if len(value.ShareList) > 0 {
+			currNodeInfo := db_dao.GetUriNodeByUri(value.Uri)
+			if currNodeInfo != nil {
+				for _, shareItem := range value.ShareList {
+					if !shareItem.Get("uri").Exists() {
+						continue
+					}
+					upstreamUri := shareItem.Get("uri").String()
+					ratio := shareItem.Get("ratio").Float()
+					if ratio < 0 {
+						continue
+					}
+					if len(upstreamUri) > 0 {
+						upstreamNodeInfo := db_dao.GetUriNodeByUri(upstreamUri)
+						if upstreamNodeInfo != nil {
+							streamList = append(streamList, model.OpusStream{
+								CurrUriId:     currNodeInfo.ID,
+								UpstreamUriId: upstreamNodeInfo.ID,
+								Ratio:         ratio,
+							})
+						}
+					}
+				}
+				db_dao.DeleteUpstreamsByNodeId(currNodeInfo.ID)
+			}
+		}
+	}
+	if len(streamList) > 0 {
+		db_dao.SaveUpstreams(streamList)
 	}
 }
