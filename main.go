@@ -13,6 +13,11 @@ func init() {
 	storage.RedisInit()
 }
 
+/*
+• “p": "fractopus" / 分形章鱼协议
+• "uri" / URI
+• shrL:[{"uri":"xxx","shr":"0.1"}]
+*/
 func main() {
 	go services.ProcessOnChainUri()
 	go services.ProcessWaitOnChainUri()

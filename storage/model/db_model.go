@@ -14,6 +14,7 @@ type ConfigParam struct {
 type OpusUri struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement;notnull"`
 	Uri       string    `gorm:"index;type:varchar(2048);not null;unique;"`
+	Owner     string    `gorm:"index;type:varchar(128);not null;"`
 	CreatedAt time.Time `gorm:"autoCreateTime;"`
 }
 

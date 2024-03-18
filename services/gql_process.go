@@ -20,12 +20,13 @@ func ProcessOnChainUri() {
 		hasNextPage := result.Get("data.transactions.pageInfo.hasNextPage").Bool()
 		edges := result.Get("data.transactions.edges").Array()
 		log.Println("ProcessOnChainUri edges ", len(edges))
-		urlMap := map[string]bool{}
+		urlMap := map[string]string{}
 		for i, edge := range edges {
 			tags := edge.Get("node.tags").Array()
+			owner := edge.Get("node.owner.address").String()
 			for _, tag := range tags {
 				if tag.Get("name").String() == "uri" {
-					urlMap[tag.Get("value").String()] = true
+					urlMap[tag.Get("value").String()] = owner
 					break
 				}
 			}
@@ -64,7 +65,7 @@ func ProcessWaitOnChainUri() {
 		edges := result.Get("data.transactions.edges").Array()
 
 		log.Println("ProcessWaitOnChainUri edges ", len(edges))
-		urlMap := map[string]bool{}
+		urlMap := map[string]string{}
 		for _, edge := range edges {
 			tags := edge.Get("node.tags").Array()
 
@@ -72,9 +73,10 @@ func ProcessWaitOnChainUri() {
 				continue
 			}
 
+			owner := edge.Get("node.owner.address").String()
 			for _, tag := range tags {
 				if tag.Get("name").String() == "uri" {
-					urlMap[tag.Get("value").String()] = true
+					urlMap[tag.Get("value").String()] = owner
 					break
 				}
 			}
@@ -84,7 +86,7 @@ func ProcessWaitOnChainUri() {
 	}
 }
 
-func saveUriListToDb(urlMap map[string]bool) {
+func saveUriListToDb(urlMap map[string]string) {
 	if len(urlMap) > 0 {
 		for key := range urlMap {
 			if db_dao.CheckUriExist(key) {
@@ -95,9 +97,11 @@ func saveUriListToDb(urlMap map[string]bool) {
 
 	if len(urlMap) > 0 {
 		var list []model.OpusUri
-		for key := range urlMap {
+		// TODO 爬虫，验证uri是否是owner的
+		for key, value := range urlMap {
 			list = append(list, model.OpusUri{
-				Uri: key,
+				Uri:   key,
+				Owner: value,
 			})
 		}
 		db_dao.SaveUris(list)
