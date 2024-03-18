@@ -11,16 +11,19 @@ type ConfigParam struct {
 	UpdateAt time.Time `gorm:"autoCreateTime;"`
 }
 
-type OpusUri struct {
+// OpusNode 分形章鱼的节点
+type OpusNode struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement;notnull"`
 	Uri       string    `gorm:"index;type:varchar(2048);not null;unique;"`
-	Owner     string    `gorm:"index;type:varchar(128);not null;"`
+	Owner     string    `gorm:"index;type:varchar(128);"`
 	CreatedAt time.Time `gorm:"autoCreateTime;"`
 }
 
+// OpusStream 每个节点的上游及其分润比例
 type OpusStream struct {
-	ID            uint      `gorm:"primaryKey;autoIncrement;notnull"`
-	CurrUriId     uint      `gorm:"index;not null"`
-	UpstreamUriId uint      `gorm:"index;not null"`
-	CreatedAt     time.Time `gorm:"autoCreateTime;"`
+	ID          uint      `gorm:"primaryKey;autoIncrement;notnull"`
+	CurrUriId   uint      `gorm:"index;not null"`
+	UpstreamUri string    `gorm:"index;type:varchar(2048);not null"`
+	Ratio       float64   `gorm:"index;type:decimal(6,4);not null"`
+	CreatedAt   time.Time `gorm:"autoCreateTime;"`
 }

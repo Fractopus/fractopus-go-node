@@ -16,7 +16,7 @@ func SqliteDbInit() {
 	}
 	gormDb = db
 	err = gormDb.AutoMigrate(&model.ConfigParam{})
-	err = gormDb.AutoMigrate(&model.OpusUri{})
+	err = gormDb.AutoMigrate(&model.OpusNode{})
 	err = gormDb.AutoMigrate(&model.OpusStream{})
 	if err != nil {
 		return
@@ -46,7 +46,7 @@ func GetLatestCursor() string {
 
 func CheckUriExist(uri string) bool {
 	var count int64 = -1
-	err := gormDb.Model(model.OpusUri{}).Where("uri=?", uri).Count(&count).Error
+	err := gormDb.Model(model.OpusNode{}).Where("uri=?", uri).Count(&count).Error
 	if err != nil {
 		log.Println(err)
 		return false
@@ -54,7 +54,7 @@ func CheckUriExist(uri string) bool {
 	return count > 0
 }
 
-func SaveUris(list []model.OpusUri) {
+func SaveUris(list []model.OpusNode) {
 	err := gormDb.Save(&list).Error
 	if err != nil {
 		log.Println(err)
