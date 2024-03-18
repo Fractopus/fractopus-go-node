@@ -29,9 +29,7 @@ func ProcessOnChainUri() {
 		log.Println("ProcessOnChainUri edges ", len(edges))
 		urlMap := map[string]FractopusInfo{}
 		for i, edge := range edges {
-			tags := edge.Get("node.tags").Array()
-			getOpusInfo(edge, tags, urlMap)
-
+			getOpusInfo(edge, urlMap)
 			if hasNextPage {
 				if i == len(edges)-1 {
 					latestCursor = edge.Get("cursor").String()
@@ -71,11 +69,10 @@ func ProcessWaitOnChainUri() {
 		log.Println("ProcessWaitOnChainUri edges ", len(edges))
 		urlMap := map[string]FractopusInfo{}
 		for _, edge := range edges {
-			tags := edge.Get("node.tags").Array()
 			if edge.Get("node.block").IsObject() {
 				continue
 			}
-			getOpusInfo(edge, tags, urlMap)
+			getOpusInfo(edge, urlMap)
 		}
 		if len(urlMap) > 0 {
 			saveUriListToDb(urlMap)
@@ -84,7 +81,8 @@ func ProcessWaitOnChainUri() {
 	}
 }
 
-func getOpusInfo(edge gjson.Result, tags []gjson.Result, urlMap map[string]FractopusInfo) {
+func getOpusInfo(edge gjson.Result, urlMap map[string]FractopusInfo) {
+	tags := edge.Get("node.tags").Array()
 	opusUri := FractopusInfo{
 		Owner: edge.Get("node.owner.address").String(),
 	}
@@ -113,6 +111,7 @@ func saveUriListToDb(urlMap map[string]FractopusInfo) {
 	if len(urlMap) > 0 {
 		list := dealMainNodes(urlMap)
 		dealUpstream(urlMap)
+
 		//TODO 获取上游详情，写入到redis
 		for _, node := range list {
 			txDetail, err := gql.GetLatestTxDetailByUri(node.Uri)
