@@ -22,7 +22,7 @@ type GraphQLRequest struct {
 	Query string `json:"query"`
 }
 
-// 获取等待上链的交易
+// GetUriWaitOnChainList 获取等待上链的交易
 func GetUriWaitOnChainList() (gjson.Result, error) {
 	ql := `
 query {
@@ -59,7 +59,6 @@ query {
 func GetUriOnChainList(lastCursor string) (gjson.Result, error) {
 	ql := `query {
 			  transactions(
-				owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
 				first: 50
 				after:"%v"
 				sort: HEIGHT_ASC
@@ -93,7 +92,6 @@ func GetUriOnChainList(lastCursor string) (gjson.Result, error) {
 func GetLatestTxDetailByUri(uri string) (gjson.Result, error) {
 	ql := `query {
 			  transactions(
-				owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
 				first: 1
 				sort: HEIGHT_ASC
 				tags: [
@@ -130,7 +128,6 @@ func GetLatestTxDetailByUri(uri string) (gjson.Result, error) {
 	ql =
 		`query {
 			  transactions(
-				owners: ["Bdcp-GSeLfL5gsF19o4yf8jdyVAKn0UdZin1-sU28us"]
 				first: 1
 				sort: HEIGHT_DESC
 				tags: [
